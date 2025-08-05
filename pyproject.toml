@@ -1,10 +1,17 @@
 [project]
 name = "image-classifier"
 version = "0.1.0"
-description = "Add your description here"
+description = "The binary image classifier written in Pytorch."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=2.2.6",
     "torch>=2.7.1",
+    "torchvision>=0.22.1",
+    "tqdm>=4.67.1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.4.1",
 ]
