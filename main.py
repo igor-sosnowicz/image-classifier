@@ -1,9 +1,8 @@
 # pylint: disable=missing-docstring
 
-from enum import Enum
 from pathlib import Path
-from typing import NamedTuple
 
+from image_classifier.data_structures import ColourModel, Dataset, Set
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 import torchvision.transforms as transforms
@@ -14,23 +13,6 @@ from tqdm import tqdm
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-class ColourModel(Enum):
-    GRAYSCALE = 1
-    RGB = 3
-    RGBA = 4
-
-
-class Set(NamedTuple):
-    features: torch.Tensor
-    labels: torch.Tensor
-
-
-class Dataset(NamedTuple):
-    training: Set
-    validation: Set
-    test: Set
 
 
 class BinaryImageClassifier(torch.nn.Module):
@@ -212,7 +194,7 @@ def load_set(set_directory: Path) -> Set:
         "Loaded %i images from %s", len(image_paths), str(path_to_images_with_fire)
     )
 
-    # Repeat for nofire images, set labels to 0
+    # Repeat for nofire images, set labels to 0.
     nofire_paths = list(path_to_images_without_fire.glob("*.jpg"))
     for img_path in tqdm(nofire_paths, desc="Loading nofire images"):
         img = Image.open(img_path).convert("RGB")
@@ -238,10 +220,9 @@ def load_dataset(dataset_path: Path, validation_percentage: float = 0.1) -> Data
     dataset_path = dataset_path.resolve().absolute()
     if not dataset_path.exists():
         raise FileExistsError(
-            f"Cannot load a dataset from non-existent location: {str(dataset_path)}"
+            f"Cannot load a dataset from the non-existent location: {str(dataset_path)}"
         )
 
-    print(dataset_path / TRAINING_AND_VALIDATION)
     training_and_validation_set = load_set(dataset_path / TRAINING_AND_VALIDATION)
     test_set = load_set(dataset_path / TEST)
 
@@ -260,6 +241,8 @@ def load_dataset(dataset_path: Path, validation_percentage: float = 0.1) -> Data
 
 def evaluate(model: BinaryImageClassifier, test_set: Set) -> None:
     loss_fn = torch.nn.MSELoss()
+    model.eval()
+
     with torch.inference_mode():
         predictions = model(test_set.features)
         loss = loss_fn(predictions, test_set.labels)
@@ -267,30 +250,38 @@ def evaluate(model: BinaryImageClassifier, test_set: Set) -> None:
     print(f"Total loss on the training set: {loss}")
 
 
-def showcase(model: torch.nn.Module, samples: int = 5) -> None:
-    # Load a few images from the test set and show their paths, infer their labels with the model.
-    test_fire_dir = Path("forest_fire") / "Testing" / "fire"
-    test_nofire_dir = Path("forest_fire") / "Testing" / "nofire"
-
-    sample_fire_images = list(test_fire_dir.glob("*"))[:samples]
-    sample_nofire_images = list(test_nofire_dir.glob("*"))[:samples]
-
+def assess_images(
+    model: torch.nn.Module, image_paths: list[Path], true_label: str
+) -> None:
     transform = transforms.Compose([transforms.ToTensor()])
+    model.eval()
 
-    def infer_and_print(img_paths, label_name):
-        for img_path in img_paths:
-            img = Image.open(img_path).convert("RGB")
-            img_tensor = transform(img).unsqueeze(0).to(device)
-            with torch.inference_mode():
-                pred = model(img_tensor)
-            print(
-                f"Path: {img_path} | True label: {label_name} | Predicted class: {'fire' if pred.item() > 0.5 else 'no fire'} | Model output: {pred.item():.4f}"
-            )
+    for img_path in image_paths:
+        img = Image.open(img_path).convert("RGB")
+        img_tensor = transform(img).unsqueeze(0).to(device)
 
-    print("Sample fire images:")
-    infer_and_print(sample_fire_images, label_name="fire")
-    print("\nSample nofire images:")
-    infer_and_print(sample_nofire_images, label_name="nofire")
+        with torch.inference_mode():
+            pred = model(img_tensor)
+
+        print(
+            f"Path: {img_path} | True label: {true_label} | "
+            f"Predicted label: {'fire' if pred.item() > 0.5 else 'no fire'} |"
+            f" Model output: {pred.item():.3f}"
+        )
+
+
+def showcase(
+    test_set_path: Path, model: torch.nn.Module, samples_per_class: int = 5
+) -> None:
+    # Load a few images from the test set and show their paths, infer their labels with the model.
+    class_labels = (
+        "fire",
+        "nofire",
+    )
+    for label in class_labels:
+        data_source_directory = test_set_path / label
+        image_files = list(data_source_directory.glob("*.jpg"))[:samples_per_class]
+        assess_images(model=model, image_paths=image_files, true_label=label)
 
 
 def main() -> None:
@@ -305,7 +296,9 @@ def main() -> None:
         validation_data=dataset.validation,
     )
     evaluate(model, dataset.test)
-    showcase(model, samples=5)
+    showcase(
+        model=model, test_set_path=dataset_location / "Testing", samples_per_class=3
+    )
 
 
 if __name__ == "__main__":
