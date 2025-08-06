@@ -1,22 +1,13 @@
-import torch
-
 from pathlib import Path
 
-from image_classifier.data_structures import (
-    ColourModel,
-    Set,
-)
 import torch
-from torch.utils.data import DataLoader, TensorDataset
-import torchvision.transforms as transforms
+import torchvision
 from PIL import Image
 
-from image_classifier.dataset import load_dataset
-from image_classifier.logger import logger
-from tqdm import tqdm
 from image_classifier.device import device
-
-from image_classifier.network import BinaryImageClassifier
+from image_classifier.data_structures import (
+    Set,
+)
 
 
 def evaluate(model: torch.nn.Module, test_set: Set) -> None:
@@ -37,7 +28,7 @@ def evaluate(model: torch.nn.Module, test_set: Set) -> None:
 def assess_images(
     model: torch.nn.Module, image_paths: list[Path], true_label: str
 ) -> None:
-    transform = transforms.Compose([transforms.ToTensor()])
+    transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
     model.eval()
 
     for img_path in image_paths:
