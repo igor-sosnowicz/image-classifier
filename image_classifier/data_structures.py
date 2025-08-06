@@ -1,7 +1,9 @@
 from enum import Enum
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 import torch
+from dataclasses import dataclass
+from pathlib import Path
 
 
 class ColourModel(Enum):
@@ -16,6 +18,15 @@ class Set(NamedTuple):
 
 
 class Dataset(NamedTuple):
-    training: Set
-    validation: Set
     test: Set
+    training: Optional[Set] = None
+    validation: Optional[Set] = None
+
+
+@dataclass
+class DataSourceDirectory:
+    path: Path
+    colour_model: ColourModel
+    class_label: int
+    loading_message: str
+    extension: str
