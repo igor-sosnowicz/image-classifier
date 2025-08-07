@@ -1,6 +1,8 @@
+"""The module for training a binary image classifier."""
+
 import torch
-from tqdm import tqdm
 from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 
 from image_classifier.device import device
 from image_classifier.logger import logger
@@ -16,12 +18,28 @@ def train(
     training_data: Set,
     validation_data: Set,
 ) -> torch.nn.Module:
-    # We expect the data in the NCHW format.
+    """
+    Train a binary image classifier using the provided training and validation datasets.
+
+    Parameters
+    ----------
+    epochs : int
+        Number of epochs to train the model.
+    training_data : Set
+        Training dataset containing features and labels in NCHW format.
+    validation_data : Set
+        Validation dataset containing features and labels in NCHW format.
+
+    Returns
+    -------
+    torch.nn.Module
+        The trained binary image classifier model.
+    """
     image_size = (training_data[0].shape[2], training_data[0].shape[3])
     model: torch.nn.Module = BinaryImageClassifier(
         colour_model=ColourModel.RGB, image_size=image_size
     )
-    model = model.to(device)  # Move model to GPU if available
+    model = model.to(device)
 
     loss_fn = torch.nn.MSELoss()
     optimiser = torch.optim.Adam(model.parameters())
