@@ -26,7 +26,6 @@ def evaluate(
 
         for Metric in metric_types:
             metric = Metric(actual=labels, predicted=predictions)
-            metric.calculate()
             print(f"{metric.get_metric_name()}: {metric.get_result()}")
 
     # TODO: Implement the following metrics: confusion matrix, F1 score, precision, accuracy.

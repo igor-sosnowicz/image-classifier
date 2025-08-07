@@ -7,7 +7,7 @@ import torch
 from image_classifier.dataset import load_dataset
 from image_classifier.evaluation import evaluate, showcase
 from image_classifier.logger import logger
-from image_classifier.metric import Accuracy
+from image_classifier.metric import Accuracy, Precision, Recall
 from image_classifier.network import BinaryImageClassifier
 from image_classifier.device import device
 from image_classifier.training import train
@@ -79,7 +79,8 @@ def main() -> None:
         test_set=dataset.test,
         metric_types=[
             Accuracy,
-            # TODO: Add more metrics.
+            Precision,
+            Recall,
         ],
     )
     showcase(

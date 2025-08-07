@@ -33,11 +33,6 @@ class Metric(abc.ABC):
         self.predicted = predicted
 
     @abc.abstractmethod
-    def calculate(self) -> None:
-        """Calculate and store a cached value of the metric."""
-        pass
-
-    @abc.abstractmethod
     def get_result(self) -> Union[int, float]:
         """
         Retrieve the latest cached version of the metric.
@@ -61,17 +56,62 @@ class Metric(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def _calculate(self) -> None:
+        """Calculate and store a cached value of the metric."""
+        pass
+
 
 class Accuracy(Metric):
     """The implementation of accuracy metric."""
 
-    def calculate(self) -> None:
+    def get_result(self) -> float:
+        if not hasattr(self, "_precision"):
+            self._calculate()
+        return self._accuracy
+
+    def get_metric_name(self) -> str:
+        return "Accuracy"
+
+    def _calculate(self) -> None:
         correct = (self.actual == self.predicted).sum().item()
         total = self.actual.numel()
         self._accuracy = correct / total if total > 0 else 0.0
 
+
+class Precision(Metric):
+    """The implementation of precision metric."""
+
     def get_result(self) -> float:
-        return getattr(self, "_accuracy", 0.0)
+        if not hasattr(self, "_precision"):
+            self._calculate()
+        return self._precision
 
     def get_metric_name(self) -> str:
-        return "Accuracy"
+        return "Precision"
+
+    def _calculate(self) -> None:
+        true_positives = ((self.predicted == 1) & (self.actual == 1)).sum().item()
+        predicted_positives = (self.predicted == 1).sum().item()
+        self._precision = (
+            true_positives / predicted_positives if predicted_positives > 0 else 0.0
+        )
+
+
+class Recall(Metric):
+    """The implementation of recall metric."""
+
+    def get_result(self) -> float:
+        if not hasattr(self, "_recall"):
+            self._calculate()
+        return self._recall
+
+    def get_metric_name(self) -> str:
+        return "Recall"
+
+    def _calculate(self) -> None:
+        true_positives = ((self.predicted == 1) & (self.actual == 1)).sum().item()
+        actual_positives = (self.actual == 1).sum().item()
+        self._recall = (
+            true_positives / actual_positives if actual_positives > 0 else 0.0
+        )
