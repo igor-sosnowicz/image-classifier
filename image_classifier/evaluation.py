@@ -8,9 +8,12 @@ from image_classifier.device import device
 from image_classifier.data_structures import (
     Set,
 )
+from image_classifier.metric import Metric
 
 
-def evaluate(model: torch.nn.Module, test_set: Set) -> None:
+def evaluate(
+    model: torch.nn.Module, metric_types: list[type[Metric]], test_set: Set
+) -> None:
     loss_fn = torch.nn.MSELoss()
     model.eval()
 
@@ -18,7 +21,13 @@ def evaluate(model: torch.nn.Module, test_set: Set) -> None:
         features = test_set.features.to(device)
         labels = test_set.labels.to(device)
         predictions = model(features).to(device)
+
         loss = loss_fn(predictions, labels)
+
+        for Metric in metric_types:
+            metric = Metric(actual=labels, predicted=predictions)
+            metric.calculate()
+            print(f"{metric.get_metric_name()}: {metric.get_result()}")
 
     # TODO: Implement the following metrics: confusion matrix, F1 score, precision, accuracy.
 

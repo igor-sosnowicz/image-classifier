@@ -7,6 +7,7 @@ import torch
 from image_classifier.dataset import load_dataset
 from image_classifier.evaluation import evaluate, showcase
 from image_classifier.logger import logger
+from image_classifier.metric import Accuracy
 from image_classifier.network import BinaryImageClassifier
 from image_classifier.device import device
 from image_classifier.training import train
@@ -73,7 +74,14 @@ def main() -> None:
         )
         torch.save(model.state_dict(), model_location)
 
-    evaluate(model, dataset.test)
+    evaluate(
+        model=model,
+        test_set=dataset.test,
+        metric_types=[
+            Accuracy,
+            # TODO: Add more metrics.
+        ],
+    )
     showcase(
         model=model, test_set_path=dataset_location / "Testing", samples_per_class=3
     )
