@@ -1,3 +1,5 @@
+"""The main module being an entrypoint to the application."""
+
 from pathlib import Path
 
 import torch
@@ -14,6 +16,14 @@ from image_classifier.data_structures import (
 
 
 def main() -> None:
+    """
+    Run the training, inference, and evaluation.
+
+    Raises
+    ------
+    RuntimeError
+        Raised if a dataset is missing or failed to load.
+    """
     epochs = 10
     dataset_location = Path("forest_fire")
     model_location = Path("model_weights.pth")
@@ -32,11 +42,19 @@ def main() -> None:
         logger.info(
             "Only the test set will be loaded, because pretrained weights has been loaded."
         )
-        dataset = load_dataset(dataset_location, test_set_only=True)
+        try:
+            dataset = load_dataset(dataset_location, test_set_only=True)
+        except FileNotFoundError as e:
+            raise RuntimeError("The dataset is missing.") from e
+
     else:
-        dataset = load_dataset(
-            dataset_location, test_set_only=False, validation_percentage=0.1
-        )
+        try:
+            dataset = load_dataset(
+                dataset_location, test_set_only=False, validation_percentage=0.1
+            )
+        except FileNotFoundError as e:
+            raise RuntimeError("The dataset is missing.") from e
+
         if dataset.training is None or dataset.validation is None:
             logger.error(
                 "Either a training set or a validation set is empty. "
