@@ -1,4 +1,4 @@
-"""Module providing the project-wide logger."""
+"""The module providing the project-wide logger."""
 
 import logging
 

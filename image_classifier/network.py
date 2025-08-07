@@ -1,4 +1,11 @@
+"""
+The module defining architecture the binary image classifier as
+an `torch`-enabled artificial neural network (ANN).
+"""
+
 import torch
+
+
 from image_classifier.data_structures import ColourModel
 
 
@@ -6,6 +13,17 @@ class BinaryImageClassifier(torch.nn.Module):
     def __init__(
         self, image_size: tuple[int, int], colour_model: ColourModel, *args, **kwargs
     ) -> None:
+        """
+        Initialise a classifier.
+
+        Parameters
+        ----------
+        image_size : tuple[int, int]
+            A size of an image made of its height and width for images
+            that will passed through the classifier.
+        colour_model : ColourModel
+            A colour model of images passed through the classifier.
+        """
         super().__init__(*args, **kwargs)
         channels = {
             "input": colour_model.value,
@@ -52,6 +70,21 @@ class BinaryImageClassifier(torch.nn.Module):
         self.sigmoid = torch.nn.Sigmoid()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Pass input (x) through the classifier to get a prediction (y).
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            An input tensor to classify images in the form
+            of tensors in the NCHW format.
+
+        Returns
+        -------
+        torch.Tensor
+            An output tensor of the network containing predicted values
+            in the range [0, 1].
+        """
         # Ensure input and model are on the same device.
         if x.device != next(self.parameters()).device:
             x = x.to(next(self.parameters()).device)
@@ -73,6 +106,29 @@ class BinaryImageClassifier(torch.nn.Module):
     def _calculate_post_pooling_size(
         size: int, num_pools: int = 3, kernels: int = 3, stride: int = 2
     ) -> int:
+        """
+        Calculate dimensions of a tensor after a series of pooling operations.
+
+        Assumptions:
+        - Padding for the pooling layers is assumed to be 0.
+        - The calculation is performed sequentially for `num_pools` pooling layers.
+
+        Parameters
+        ----------
+        size : int
+            An initial size of the an dimension (height or width).
+        num_pools : int, optional
+            A number of pooling layers applied sequentially, by default 3.
+        kernels : int, optional
+            A kernel size used for pooling, by default 3.
+        stride : int, optional
+            A stride used for pooling, by default 2.
+
+        Returns
+        -------
+        int
+            A size of the image dimension after all pooling operations.
+        """
         for _ in range(num_pools):
-            size = (size + 2 * 0 - kernels) // stride + 1  # padding=0 for avgpool
+            size = (size + 2 * 0 - kernels) // stride + 1
         return int(size)
