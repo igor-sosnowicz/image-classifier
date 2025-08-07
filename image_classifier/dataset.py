@@ -1,3 +1,8 @@
+"""
+The module for a dataset loading from a filesystem and the dataset
+manipulations, such as splitting into sub-sets.
+"""
+
 from pathlib import Path
 from typing import Sequence
 
@@ -22,9 +27,22 @@ def split_set(
     randomise: bool = True,
 ) -> tuple[Set, Set]:
     """
-    Splits the given features and labels into two sets according to the given percentage.
-    Returns (first_set, second_set).
-    If randomise is True, shuffles the data before splitting.
+    Split a set into two sub-sets.
+
+    Parameters
+    ----------
+    entire_set : Set
+        An initial set containing samples to be splitted.
+    first_set_percentage : float
+        A value in the range (0, 1) what part of the initial set
+        should go the first sub-set.
+    randomise : bool, optional
+        Whether samples should be assigned randomly. By default, True.
+
+    Returns
+    -------
+    tuple[Set, Set]
+        A tuple containing two sub-sets.
     """
     features, labels = entire_set[0], entire_set[1]
     num_samples = features.shape[0]
@@ -41,9 +59,24 @@ def split_set(
     return first_set, second_set
 
 
-def _load_set_from_directories(
+def _load_and_preprocess_from_directories(
     data_source_directories: Sequence[DataSourceDirectory],
 ) -> Set:
+    """
+    Load a set from one or more directories.
+
+    Parameters
+    ----------
+    data_source_directories : Sequence[DataSourceDirectory]
+        An iterable containing entries, which describe directories to
+        load the data from.
+
+    Returns
+    -------
+    Set
+        A set made of combined data from all directories indicated
+        in `data_source_directories`.
+    """
     images = []
     image_classes = []
 
@@ -72,6 +105,19 @@ def _load_set_from_directories(
 
 
 def load_set(set_directory: Path) -> Set:
+    """
+    Load a set of the Wildfire Detection Image Data dataset.
+
+    Parameters
+    ----------
+    set_directory : Path
+        _description_
+
+    Returns
+    -------
+    Set
+        _description_
+    """
     fire_config = DataSourceDirectory(
         set_directory / "fire",
         ColourModel.RGB,
@@ -87,7 +133,7 @@ def load_set(set_directory: Path) -> Set:
         "jpg",
     )
 
-    return _load_set_from_directories((fire_config, fireless_config))
+    return _load_and_preprocess_from_directories((fire_config, fireless_config))
 
 
 def load_dataset(
@@ -95,7 +141,33 @@ def load_dataset(
     validation_percentage: float = 0.1,
     test_set_only: bool = False,
 ) -> Dataset:
-    # Training & validation sets share the common set in this database.
+    """
+    Load the Wildfire Detection Image Data dataset from a directory.
+
+    Parameters
+    ----------
+    dataset_path : Path
+        A path to the root directory of the Wildfire Detection Image Data dataset.
+    validation_percentage : float, optional
+        A value in the range (0, 1), defining what part of
+        the training+validation set should go the validation set.
+        The validation and training set are combined in this dataset.
+        Defaults to 0.1.
+    test_set_only : bool, optional
+        Whether to load only a test set. It is not necessary to load
+        the entire dataset for the sole evaluation on the test set.
+        Defaults to False.
+
+    Returns
+    -------
+    Dataset
+        The preprocessed dataset loaded into memory.
+
+    Raises
+    ------
+    FileExistsError
+        Raised if there is no dataset under the provided location.
+    """
     TRAINING_AND_VALIDATION = "Training and Validation"
     TEST = "Testing"
     dataset_path = dataset_path.resolve().absolute()
