@@ -18,7 +18,10 @@ from image_classifier.metric import Metric
 
 
 def evaluate(
-    model: torch.nn.Module, metric_types: list[type[Metric]], test_set: Set
+    model: torch.nn.Module,
+    metric_types: list[type[Metric]],
+    test_set: Set,
+    precision: int = 3,
 ) -> None:
     """
     Evaluate the trained model with Mean Squared Error (MSE) loss and other metrics.
@@ -28,10 +31,12 @@ def evaluate(
     model : torch.nn.Module
         The model to be evaluated.
     metric_types : list[type[Metric]]
-        A list of classes representing metrics that should be calculated.
-        These metric classes should be imported from `images_classifier.metric` module.
+        A list of classes representing metrics to be calculated.
+        These metric classes should be imported from the `image_classifier.metric` module.
     test_set : Set
-        A test set, on which the metrics should be calculated.
+        The test set on which the metrics should be calculated.
+    precision : int
+        Number of digits to display after the decimal point for metric results.
     """
     loss_fn = torch.nn.MSELoss()
     model.eval()
@@ -45,9 +50,9 @@ def evaluate(
 
         for Metric in metric_types:
             metric = Metric(actual=labels, predicted=predictions)
-            print(f"{metric.get_metric_name()}: {metric.get_result()}")
+            print(f"{metric.get_metric_name()}: {metric.get_result():.{precision}f}")
 
-    print(f"Loss: {loss}")
+    print(f"Loss: {loss:{precision}f}")
 
 
 def assess_images(
