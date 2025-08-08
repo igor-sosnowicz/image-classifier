@@ -1,9 +1,13 @@
 """Module for testing splitting, preprocessing, and loading a dataset."""
 
+from pathlib import Path
+from uuid import uuid4
+
 import torch
 import pytest
 
-from main import Set, split_set
+from image_classifier.dataset import load_dataset
+from image_classifier.dataset import Set, split_set
 
 
 @pytest.fixture
@@ -38,3 +42,9 @@ def test_splitting_set(sample_set, randomise: bool) -> None:
     assert total == 100
     assert len(training_set.features) == 70
     assert len(validation_set.features) == 30
+
+
+def test_loading_non_existent_database():
+    with pytest.raises(FileNotFoundError):
+        non_existent_path = Path(str(uuid4())) / str(uuid4())
+        load_dataset(non_existent_path)

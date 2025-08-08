@@ -165,14 +165,14 @@ def load_dataset(
 
     Raises
     ------
-    FileExistsError
+    FileNotFoundError
         Raised if there is no dataset under the provided location.
     """
     TRAINING_AND_VALIDATION = "Training and Validation"
     TEST = "Testing"
     dataset_path = dataset_path.resolve().absolute()
     if not dataset_path.exists():
-        raise FileExistsError(
+        raise FileNotFoundError(
             f"Cannot load a dataset from the non-existent location: {str(dataset_path)}"
         )
 
