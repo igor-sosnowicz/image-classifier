@@ -32,7 +32,7 @@ def split_set(
     Parameters
     ----------
     entire_set : Set
-        An initial set containing samples to be splitted.
+        An initial set containing samples to be split.
     first_set_percentage : float
         A value in the range (0, 1) what part of the initial set
         should go the first sub-set.

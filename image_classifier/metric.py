@@ -29,8 +29,8 @@ class Metric(abc.ABC):
             The tensor with predicted labels.
         """
         super().__init__()
-        self.actual = actual
-        self.predicted = predicted
+        self._actual = actual
+        self._predicted = predicted
 
     @abc.abstractmethod
     def get_result(self) -> Union[int, float]:
@@ -42,7 +42,6 @@ class Metric(abc.ABC):
         Union[int, float]
             The value of the metric.
         """
-        pass
 
     @abc.abstractmethod
     def get_metric_name(self) -> str:
@@ -54,12 +53,10 @@ class Metric(abc.ABC):
         str
             The textual name of the metric.
         """
-        pass
 
     @abc.abstractmethod
     def _calculate(self) -> None:
         """Calculate and store a cached value of the metric."""
-        pass
 
 
 class Accuracy(Metric):
@@ -74,9 +71,9 @@ class Accuracy(Metric):
         return "Accuracy"
 
     def _calculate(self) -> None:
-        predicted_classes = (self.predicted > 0.5).to(dtype=torch.int)
-        correct = (self.actual == predicted_classes).sum().item()
-        total = self.actual.numel()
+        predicted_classes = (self._predicted > 0.5).to(dtype=torch.int)
+        correct = (self._actual == predicted_classes).sum().item()
+        total = self._actual.numel()
         self._accuracy = correct / total if total > 0 else 0.0
 
 
@@ -92,8 +89,8 @@ class Precision(Metric):
         return "Precision"
 
     def _calculate(self) -> None:
-        predicted_classes = (self.predicted > 0.5).to(dtype=torch.int)
-        true_positives = ((predicted_classes == 1) & (self.actual == 1)).sum().item()
+        predicted_classes = (self._predicted > 0.5).to(dtype=torch.int)
+        true_positives = ((predicted_classes == 1) & (self._actual == 1)).sum().item()
         predicted_positives = (predicted_classes == 1).sum().item()
         self._precision = (
             true_positives / predicted_positives if predicted_positives > 0 else 0.0
@@ -112,9 +109,9 @@ class Recall(Metric):
         return "Recall"
 
     def _calculate(self) -> None:
-        predicted_classes = (self.predicted > 0.5).int()
-        true_positives = ((predicted_classes == 1) & (self.actual == 1)).sum().item()
-        actual_positives = (self.actual == 1).sum().item()
+        predicted_classes = (self._predicted > 0.5).int()
+        true_positives = ((predicted_classes == 1) & (self._actual == 1)).sum().item()
+        actual_positives = (self._actual == 1).sum().item()
         self._recall = (
             true_positives / actual_positives if actual_positives > 0 else 0.0
         )
